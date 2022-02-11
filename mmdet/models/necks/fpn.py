@@ -106,6 +106,8 @@ class FPN(BaseModule):
         self.lateral_convs = nn.ModuleList()
         self.fpn_convs = nn.ModuleList()
 
+        self.relus = nn.ModuleList()
+
         for i in range(self.start_level, self.backbone_end_level):
             l_conv = ConvModule(
                 in_channels[i],
@@ -127,6 +129,8 @@ class FPN(BaseModule):
 
             self.lateral_convs.append(l_conv)
             self.fpn_convs.append(fpn_conv)
+            if self.relu_before_extra_convs:
+                self.relus.append(nn.ReLU(inplace=True))
 
         # add extra conv layers (e.g., RetinaNet)
         extra_levels = num_outs - self.backbone_end_level + self.start_level
@@ -147,6 +151,9 @@ class FPN(BaseModule):
                     act_cfg=act_cfg,
                     inplace=False)
                 self.fpn_convs.append(extra_fpn_conv)
+
+                if self.relu_before_extra_convs:
+                    self.relus.append(nn.ReLU(inplace=True))
 
     @auto_fp16()
     def forward(self, inputs):
@@ -197,7 +204,7 @@ class FPN(BaseModule):
                 outs.append(self.fpn_convs[used_backbone_levels](extra_source))
                 for i in range(used_backbone_levels + 1, self.num_outs):
                     if self.relu_before_extra_convs:
-                        outs.append(self.fpn_convs[i](F.relu(outs[-1])))
+                        outs.append(self.fpn_convs[i](self.relus[i](outs[-1])))
                     else:
                         outs.append(self.fpn_convs[i](outs[-1]))
         return tuple(outs)

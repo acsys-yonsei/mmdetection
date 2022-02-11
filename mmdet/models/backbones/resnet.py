@@ -48,7 +48,8 @@ class BasicBlock(BaseModule):
             conv_cfg, planes, planes, 3, padding=1, bias=False)
         self.add_module(self.norm2_name, norm2)
 
-        self.relu = nn.ReLU(inplace=True)
+        self.relu1 = nn.ReLU(inplace=True)
+        self.relu2 = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
         self.dilation = dilation
@@ -72,7 +73,7 @@ class BasicBlock(BaseModule):
 
             out = self.conv1(x)
             out = self.norm1(out)
-            out = self.relu(out)
+            out = self.relu1(out)
 
             out = self.conv2(out)
             out = self.norm2(out)
@@ -89,7 +90,7 @@ class BasicBlock(BaseModule):
         else:
             out = _inner_forward(x)
 
-        out = self.relu(out)
+        out = self.relu2(out)
 
         return out
 
@@ -205,7 +206,9 @@ class Bottleneck(BaseModule):
             bias=False)
         self.add_module(self.norm3_name, norm3)
 
-        self.relu = nn.ReLU(inplace=True)
+        self.relu1 = nn.ReLU(inplace=True)
+        self.relu2 = nn.ReLU(inplace=True)
+        self.relu3 = nn.ReLU(inplace=True)
         self.downsample = downsample
 
         if self.with_plugins:
@@ -267,14 +270,14 @@ class Bottleneck(BaseModule):
             identity = x
             out = self.conv1(x)
             out = self.norm1(out)
-            out = self.relu(out)
+            out = self.relu1(out) ###
 
             if self.with_plugins:
                 out = self.forward_plugin(out, self.after_conv1_plugin_names)
 
             out = self.conv2(out)
             out = self.norm2(out)
-            out = self.relu(out)
+            out = self.relu2(out) ###
 
             if self.with_plugins:
                 out = self.forward_plugin(out, self.after_conv2_plugin_names)
@@ -297,7 +300,7 @@ class Bottleneck(BaseModule):
         else:
             out = _inner_forward(x)
 
-        out = self.relu(out)
+        out = self.relu3(out) ###
 
         return out
 
